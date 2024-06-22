@@ -1,27 +1,27 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Static, Button
 from textual.reactive import reactive
-
+from animacion import obtener_pelicula
 
 class AreaAnimacion(Static):
     """Espacio donde se verá la animación"""
-    
-    palabra = "Otorrinolaringologo"
-    letra = reactive("")
+    with open("mundo.txt") as archivo:
+        pelicula = obtener_pelicula(archivo)
+    frame = reactive("")
     i = reactive(0)
     
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
-        self.animacion = self.set_interval(1 / 2, self.actualizar_letra, pause=True)
+        self.animacion = self.set_interval(1 / 10, self.actualizar_frame, pause=True)
 
-    def actualizar_letra(self) -> None:
-        """Metodo que va acutalizando el valor de letra"""
-        self.letra = self.palabra[self.i % len(self.palabra)]
+    def actualizar_frame(self) -> None:
+        """Metodo que va acutalizando el valor de frame"""
+        self.frame = self.pelicula[self.i % len(self.pelicula)]
         self.i += 1
             
-    def watch_letra(self, nueva_letra) -> None:
-        """Se llama cuando la variable letra cambia"""
-        self.update(nueva_letra)
+    def watch_frame(self, nuevo_frame) -> None:
+        """Se llama cuando la variable frame cambia"""
+        self.update(nuevo_frame)
 
     def play(self) -> None:
         """Metodo para iniciar o resumir la animación"""

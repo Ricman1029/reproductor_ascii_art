@@ -4,40 +4,43 @@ import time
 def limpiar_pantalla():
     os.system("cls")
 
-def obtener_configuracion(cadena):
-    len_cadena = len(cadena)
+def obtener_configuracion(archivo):
+    config = archivo.readline()
+    
+    len_cadena = len(config)
     i = 0
     # Seteamos unos valores para velocidad y repeticion por defecto
     velocidad = 0.5
-    repetir = "SI"
+    # repetir = "SI"
 
     while i < len_cadena:
-        carac = cadena[i]
+        carac = config[i]
         nombre = ""
         # Primero viene el nombre hasta que hay un "="
         while i < len_cadena and carac != "=":
             nombre += carac
             i += 1
-            carac = cadena[i]
+            carac = config[i]
         # El "=" no nos interesa asi que lo salteamos
         i += 1
-        carac = cadena[i]
+        carac = config[i]
         valor = ""
         # Ahora viene el valor hasta que hay un ";"
         while i < len_cadena and carac != ";" and carac != "\n":
             valor += carac
             i += 1
             if i < len_cadena:
-                carac = cadena[i]
+                carac = config[i]
         # El ";" no nos interesa asi que lo salteamos
         i += 1
         # Ya tenemos el nombre y el valor asi que lo asignamos a la variable correspondiente
         if nombre == "VELOCIDAD":
             velocidad = float(valor)
-        if nombre == "REPETIR":
-            repetir = valor
+        # if nombre == "REPETIR":
+        #     repetir = valor
 
-    return velocidad, repetir
+    # return velocidad, repetir
+    return velocidad
 
 
 def obtener_pelicula(archivo):
@@ -72,8 +75,7 @@ def animar_pelicula(imagenes, velocidad, repetir):
 
 def ejecutar_animacion(archivo):
     # Obtenemos la configuración para la animación
-    config = archivo.readline()
-    velocidad, repetir = obtener_configuracion(config)
+    velocidad, repetir = obtener_configuracion(archivo)
 
     # Guardo todos los frames en una tupla
     pelicula = obtener_pelicula(archivo)

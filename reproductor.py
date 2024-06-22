@@ -1,18 +1,19 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Static, Button
 from textual.reactive import reactive
-from animacion import obtener_pelicula
+from animacion import obtener_pelicula, obtener_configuracion
 
 class AreaAnimacion(Static):
     """Espacio donde se verá la animación"""
     with open("mundo.txt") as archivo:
+        velocidad = obtener_configuracion(archivo)
         pelicula = obtener_pelicula(archivo)
     frame = reactive("")
-    i = reactive(0)
+    i = 0       # Puede ser un problema el valor de i?
     
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
-        self.animacion = self.set_interval(1 / 10, self.actualizar_frame, pause=True)
+        self.animacion = self.set_interval(self.velocidad, self.actualizar_frame, pause=True)
 
     def actualizar_frame(self) -> None:
         """Metodo que va acutalizando el valor de frame"""

@@ -1,0 +1,14 @@
+AreaAnimacion {
+    width: 100%;
+    height: 35;
+    border: red;
+}
+
+Botones {
+    layout: horizontal;
+    margin: 1 1;
+}
+
+Button {
+    margin: 0 1
+}

@@ -4,13 +4,15 @@ from textual.reactive import reactive
 from animacion import obtener_pelicula, obtener_configuracion
 
 class AreaAnimacion(Static):
-    """Espacio donde se verá la animación"""
-    with open("mundo.txt") as archivo:
-        velocidad = obtener_configuracion(archivo)
-        pelicula = obtener_pelicula(archivo)
-    frame = reactive("")
-    i = 0       # Puede ser un problema el valor de i?
     
+    frame = reactive("")
+    
+    def __init__(self, velocidad, pelicula, *args, **kwargs):
+        super(AreaAnimacion, self).__init__(*args, **kwargs)
+        self.velocidad = velocidad
+        self.pelicula = pelicula
+        self.i = 0       # Puede ser un problema el valor de i?
+        
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
         self.animacion = self.set_interval(self.velocidad, self.actualizar_frame, pause=True)
@@ -44,18 +46,26 @@ class Botones(Static):
 class Reproductor(Static):
     """El reproductor"""
 
+    
+    def __init__(self, *args, **kwargs):
+        super(Reproductor, self).__init__(*args, **kwargs)
+        """Espacio donde se verá la animación"""
+        with open("mundo.txt") as archivo:
+            self.velocidad = obtener_configuracion(archivo)
+            self.pelicula = obtener_pelicula(archivo)
+        self.area_animacion = AreaAnimacion(self.velocidad, self.pelicula)
+
     def compose(self) -> ComposeResult:
-        yield AreaAnimacion()
+        yield self.area_animacion
         yield Botones()
         
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""
         button_id = event.button.id
-        area_animacion = self.query_one(AreaAnimacion)
         if button_id == "play":
-            area_animacion.play()
+            self.area_animacion.play()
         elif button_id == "pausa":
-            area_animacion.pausa()
+            self.area_animacion.pausa()
 
 
 

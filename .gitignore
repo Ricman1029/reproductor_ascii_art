@@ -3,3 +3,6 @@
 
 # Ignorar archivos generados por el interprete de python
 __pycache__/
+
+# Ignorar el entorno virtual
+env/

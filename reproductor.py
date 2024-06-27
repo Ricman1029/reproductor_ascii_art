@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Static, Button
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from animacion import obtener_pelicula, obtener_configuracion
 
@@ -35,7 +36,7 @@ class AreaAnimacion(Static):
         self.animacion.pause()
 
 
-class Botones(Static):
+class Botones(Horizontal):
         
     def compose(self) -> ComposeResult:
         yield Button("Play", id="play")
@@ -43,7 +44,7 @@ class Botones(Static):
         yield Button("Adelante", id="adelante")
         yield Button("Atras", id="atras")
 
-class Reproductor(Static):
+class Reproductor(Vertical):
     """El reproductor"""
 
     

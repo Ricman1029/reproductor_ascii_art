@@ -5,7 +5,6 @@ AreaAnimacion {
 }
 
 Botones {
-    layout: horizontal;
     margin: 1 1;
 }
 

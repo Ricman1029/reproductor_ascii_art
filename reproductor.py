@@ -3,7 +3,14 @@ from textual.widgets import Header, Static, Button
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from animacion import obtener_pelicula, obtener_configuracion
+from enum import Enum
 
+class EstadoReproduccion(Enum):
+    PAUSADO = 0
+    REPRODUCIENDO = 1
+    DETENIDO = 2 
+
+        
 class AreaAnimacion(Static):
     
     frame = reactive("")
@@ -35,12 +42,17 @@ class AreaAnimacion(Static):
         """Metodo para pausar la animación"""
         self.animacion.pause()
 
+    def detener(self) -> None:
+        self.i = 0
+        self.frame = ""
+        self.animacion.reset()
+        self.animacion.pause()
 
 class Botones(Horizontal):
         
     def compose(self) -> ComposeResult:
-        yield Button("Play", id="play")
-        yield Button("Pausa", id="pausa")
+        yield Button("Play", variant="success", id="play", classes="button_play")
+        yield Button("Detener", variant="error", id="stop")
         yield Button("Adelante", id="adelante")
         yield Button("Atras", id="atras")
 
@@ -55,20 +67,41 @@ class Reproductor(Vertical):
             self.velocidad = obtener_configuracion(archivo)
             self.pelicula = obtener_pelicula(archivo)
         self.area_animacion = AreaAnimacion(self.velocidad, self.pelicula)
+        self.estado_reproduccion = EstadoReproduccion.DETENIDO
 
     def compose(self) -> ComposeResult:
         yield self.area_animacion
         yield Botones()
-        
+    
+    def preparar_boton_pausa(self):
+        boton = self.query_one("#play")
+        boton.label = "Pausar"
+        boton.variant = "primary"
+
+    def preparar_boton_play(self):
+        boton = self.query_one("#play")
+        boton.label = "Play"
+        boton.variant = "success"
+
+    
+                
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""
         button_id = event.button.id
         if button_id == "play":
-            self.area_animacion.play()
-        elif button_id == "pausa":
-            self.area_animacion.pausa()
-
-
+            if self.estado_reproduccion in (EstadoReproduccion.DETENIDO, EstadoReproduccion.PAUSADO):
+                self.estado_reproduccion = EstadoReproduccion.REPRODUCIENDO
+                self.preparar_boton_pausa()
+                self.area_animacion.play()                
+            else:
+                self.estado_reproduccion = EstadoReproduccion.PAUSADO
+                self.preparar_boton_play()
+                self.area_animacion.pausa()
+                
+        elif button_id == "stop":
+            self.estado_reproduccion = EstadoReproduccion.DETENIDO
+            self.area_animacion.detener()
+            self.preparar_boton_play()
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""

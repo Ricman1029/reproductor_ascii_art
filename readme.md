@@ -25,3 +25,8 @@ Luego, cada cuadro o frame de la animación está separado por la siguiente marc
 
 1. Adelantar y retroceder
 2. Slowmotion
+3. Selector de archivos para reproducir
+4. Soporte para animaciones en color
+5. Lista de reproducción
+6. Barra de progreso + avanzar hasta un punto con el mouse.
+

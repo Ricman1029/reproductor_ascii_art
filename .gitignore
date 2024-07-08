@@ -6,3 +6,6 @@ __pycache__/
 
 # Ignorar el entorno virtual
 env/
+
+# Otras carpetas
+.idea/

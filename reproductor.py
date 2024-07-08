@@ -8,9 +8,15 @@ from enum import Enum
 class EstadoReproduccion(Enum):
     PAUSADO = 0
     REPRODUCIENDO = 1
-    DETENIDO = 2 
+    DETENIDO = 2
 
-        
+class ToastApp(App[None]):
+    def notificacion_adelantar(self) -> None:
+        self.notify("Adelantando 5s.", timeout=1.5)
+
+    def notificacion_retroceder(self) -> None:
+        self.notify("Retrocediendo 5s.", timeout=1.5)
+
 class AreaAnimacion(Static):
     
     frame = reactive("")
@@ -48,13 +54,23 @@ class AreaAnimacion(Static):
         self.animacion.reset()
         self.animacion.pause()
 
+    def adelantar(self) -> None:
+        ToastApp.notificacion_adelantar(self)
+        self.i += int(self.velocidad * 500)
+        self.frame = self.pelicula[self.i % len(self.pelicula)]
+
+    def retroceder(self) -> None:
+        ToastApp.notificacion_retroceder(self)
+        self.i -= int(self.velocidad * 500)
+        self.frame = self.pelicula[self.i % len(self.pelicula)]
+
 class Botones(Horizontal):
         
     def compose(self) -> ComposeResult:
         yield Button("Play", variant="success", id="play", classes="button_play")
         yield Button("Detener", variant="error", id="stop")
-        yield Button("Adelante", id="adelante")
-        yield Button("Atras", id="atras")
+        yield Button("Adelante", id="adelantar")
+        yield Button("Atras", id="retroceder")
 
 class Reproductor(Vertical):
     """El reproductor"""
@@ -102,6 +118,14 @@ class Reproductor(Vertical):
             self.estado_reproduccion = EstadoReproduccion.DETENIDO
             self.area_animacion.detener()
             self.preparar_boton_play()
+
+        elif button_id == "adelantar":
+            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+                self.area_animacion.adelantar()
+
+        elif button_id == "retroceder":
+            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+                self.area_animacion.retroceder()
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""

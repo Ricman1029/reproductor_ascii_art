@@ -25,7 +25,7 @@ class AreaAnimacion(Static):
         super(AreaAnimacion, self).__init__(*args, **kwargs)
         self.velocidad = velocidad
         self.pelicula = pelicula
-        self.i = 0       # Puede ser un problema el valor de i?
+        self.i = 0
         
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
@@ -33,8 +33,8 @@ class AreaAnimacion(Static):
 
     def actualizar_frame(self) -> None:
         """Metodo que va acutalizando el valor de frame"""
-        self.frame = self.pelicula[self.i % len(self.pelicula)]
-        self.i += 1
+        self.frame = self.pelicula[self.i]
+        self.i = self.i + 1 if self.i + 1 < len(self.pelicula) else 0
             
     def watch_frame(self, nuevo_frame) -> None:
         """Se llama cuando la variable frame cambia"""
@@ -56,13 +56,15 @@ class AreaAnimacion(Static):
 
     def adelantar(self) -> None:
         ToastApp.notificacion_adelantar(self)
-        self.i += int(self.velocidad * 500)
-        self.frame = self.pelicula[self.i % len(self.pelicula)]
+        nuevo_indice = self.i + int(1 / self.velocidad * 5)
+        self.i = nuevo_indice if nuevo_indice < len(self.pelicula) else nuevo_indice - len(self.pelicula)
+        self.frame = self.pelicula[self.i]
 
     def retroceder(self) -> None:
         ToastApp.notificacion_retroceder(self)
-        self.i -= int(self.velocidad * 500)
-        self.frame = self.pelicula[self.i % len(self.pelicula)]
+        nuevo_indice = self.i - int(1 / self.velocidad * 5)
+        self.i = nuevo_indice if nuevo_indice >= 0 else len(self.pelicula) + nuevo_indice - 1
+        self.frame = self.pelicula[self.i]
 
 class Botones(Horizontal):
         

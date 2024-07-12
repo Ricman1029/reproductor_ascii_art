@@ -82,7 +82,7 @@ class Reproductor(Vertical):
         super(Reproductor, self).__init__(*args, **kwargs)
         """Espacio donde se verá la animación"""
         with open("mundo.txt") as archivo:
-            self.velocidad = obtener_configuracion(archivo)
+            self.velocidad, _ = obtener_configuracion(archivo)
             self.pelicula = obtener_pelicula(archivo)
         self.area_animacion = AreaAnimacion(self.velocidad, self.pelicula)
         self.estado_reproduccion = EstadoReproduccion.DETENIDO

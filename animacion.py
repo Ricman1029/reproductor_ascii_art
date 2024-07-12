@@ -1,47 +1,9 @@
 import os
 import time
+from configuracion import obtener_configuracion
 
 def limpiar_pantalla():
     os.system("cls")
-
-def obtener_configuracion(archivo):
-    config = archivo.readline()
-    
-    len_cadena = len(config)
-    i = 0
-    # Seteamos unos valores para velocidad y repeticion por defecto
-    velocidad = 0.5
-    # repetir = "SI"
-
-    while i < len_cadena:
-        carac = config[i]
-        nombre = ""
-        # Primero viene el nombre hasta que hay un "="
-        while i < len_cadena and carac != "=":
-            nombre += carac
-            i += 1
-            carac = config[i]
-        # El "=" no nos interesa asi que lo salteamos
-        i += 1
-        carac = config[i]
-        valor = ""
-        # Ahora viene el valor hasta que hay un ";"
-        while i < len_cadena and carac != ";" and carac != "\n":
-            valor += carac
-            i += 1
-            if i < len_cadena:
-                carac = config[i]
-        # El ";" no nos interesa asi que lo salteamos
-        i += 1
-        # Ya tenemos el nombre y el valor asi que lo asignamos a la variable correspondiente
-        if nombre == "VELOCIDAD":
-            velocidad = float(valor)
-        # if nombre == "REPETIR":
-        #     repetir = valor
-
-    # return velocidad, repetir
-    return velocidad
-
 
 def obtener_pelicula(archivo):
     frame = ""

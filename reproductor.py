@@ -9,6 +9,7 @@ class EstadoReproduccion(Enum):
     PAUSADO = 0
     REPRODUCIENDO = 1
     DETENIDO = 2
+    SLOWMOTION = 3
 
 class DireccionReproduccion(Enum):
     ADELANTE = 0
@@ -21,6 +22,12 @@ class ToastApp(App[None]):
 
     def notificacion_retroceder(self) -> None:
         self.notify("Retrocediendo 5s.", timeout=1.5)
+
+    def notificacion_slow_motion_activado(self) -> None:
+        self.notify("Velocidad 0.5", timeout=1.5)
+
+    def notificacion_slow_motion_desactivado(self) -> None:
+        self.notify("Velocidad Normal", timeout=1.5)
 
 class AreaAnimacion(Static):
     
@@ -95,6 +102,18 @@ class AreaAnimacion(Static):
         else:
             self.direccion_reproduccion = DireccionReproduccion.ADELANTE
 
+    def alternar_slow_motion(self, estado_reproduccion) -> None:
+        if estado_reproduccion == EstadoReproduccion.SLOWMOTION:
+            nueva_velocidad = self.velocidad * 2
+            ToastApp.notificacion_slow_motion_activado(self)
+        elif estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
+            nueva_velocidad = self.velocidad
+            ToastApp.notificacion_slow_motion_desactivado(self)
+        
+        self.animacion.stop()
+        self.animacion = self.set_interval(nueva_velocidad, self.actualizar_frame, pause=True)
+        self.animacion.resume()
+
 class Botones(Horizontal):
         
     def compose(self) -> ComposeResult:
@@ -103,6 +122,7 @@ class Botones(Horizontal):
         yield Button("Adelantar", id="adelantar")
         yield Button("Retroceder", id="retroceder")
         yield Button("<--", variant="warning", id="invertir")
+        yield Button("Velocidad 0.5 x", id="slow_motion")
 
 class Reproductor(Vertical):
     """El reproductor"""
@@ -137,6 +157,13 @@ class Reproductor(Vertical):
             boton.label = "<--"
         else:
             boton.label = "-->"
+
+    def preparar_boton_slow_motion(self):
+        boton = self.query_one("#slow_motion")
+        if self.estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
+            boton.label = "Velocidad 0.5 x"
+        elif self.estado_reproduccion == EstadoReproduccion.SLOWMOTION:
+            boton.label = "Velocidad 1.0 x"
             
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""
@@ -166,6 +193,14 @@ class Reproductor(Vertical):
             if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
                 self.area_animacion.invertir()
                 self.preparar_boton_invertir()
+        elif button_id == "slow_motion" and self.estado_reproduccion in (EstadoReproduccion.REPRODUCIENDO, EstadoReproduccion.SLOWMOTION):
+            if self.estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
+                self.estado_reproduccion = EstadoReproduccion.SLOWMOTION
+                self.preparar_boton_slow_motion()
+            elif self.estado_reproduccion == EstadoReproduccion.SLOWMOTION:
+                self.estado_reproduccion = EstadoReproduccion.REPRODUCIENDO 
+                self.preparar_boton_slow_motion()
+            self.area_animacion.alternar_slow_motion(self.estado_reproduccion)
                 
 
 class ReproductorApp(App):

@@ -11,3 +11,7 @@ Botones {
 Button {
     margin: 0 1
 }
+
+#slow_motion {
+    background: #5eb1bf
+}

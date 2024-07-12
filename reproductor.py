@@ -39,15 +39,19 @@ class AreaAnimacion(Static):
 
     def hacia_adelante(self, frames) -> None:
         self.i = self.i + frames if self.i + frames < len(self.pelicula) else 0
-        
+                
     def hacia_atras(self, frames) -> None:
         self.i = self.i - frames if self.i - frames > 0 else len(self.pelicula) - 1
+
+    def aplicar_frame(self):
+        self.frame = self.pelicula[self.i]
 
     def mover(self, n, direccion = DireccionReproduccion.ADELANTE):
         if direccion == DireccionReproduccion.ADELANTE:
             self.hacia_adelante(n)
         else:
             self.hacia_atras(n)
+        self.aplicar_frame()
 
     def actualizar_frame(self) -> None:
         """Método que va actualizando el valor de frame"""
@@ -78,12 +82,12 @@ class AreaAnimacion(Static):
     def adelantar(self) -> None:
         ToastApp.notificacion_adelantar(self)
         frames = self.frames_por_segundo() * 5
-        self.hacia_adelante(frames)
+        self.mover(frames, DireccionReproduccion.ADELANTE)
         
     def retroceder(self) -> None:
         ToastApp.notificacion_retroceder(self)
         frames = self.frames_por_segundo() * 5
-        self.hacia_atras(frames)
+        self.mover(frames, DireccionReproduccion.ATRAS)
 
     def invertir(self) -> None:
         if self.direccion_reproduccion == DireccionReproduccion.ADELANTE:

@@ -10,6 +10,11 @@ class EstadoReproduccion(Enum):
     REPRODUCIENDO = 1
     DETENIDO = 2
 
+class DireccionReproduccion(Enum):
+    ADELANTE = 0
+    ATRAS = 1
+
+
 class ToastApp(App[None]):
     def notificacion_adelantar(self) -> None:
         self.notify("Adelantando 5s.", timeout=1.5)
@@ -26,26 +31,43 @@ class AreaAnimacion(Static):
         self.velocidad = velocidad
         self.pelicula = pelicula
         self.i = 0
+        self.direccion_reproduccion = DireccionReproduccion.ADELANTE
         
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
         self.animacion = self.set_interval(self.velocidad, self.actualizar_frame, pause=True)
 
-    def actualizar_frame(self) -> None:
-        """Metodo que va acutalizando el valor de frame"""
+    def hacia_adelante(self, frames) -> None:
+        self.i = self.i + frames if self.i + frames < len(self.pelicula) else 0
+                
+    def hacia_atras(self, frames) -> None:
+        self.i = self.i - frames if self.i - frames > 0 else len(self.pelicula) - 1
+
+    def aplicar_frame(self):
         self.frame = self.pelicula[self.i]
-        self.i = self.i + 1 if self.i + 1 < len(self.pelicula) else 0
-            
+
+    def mover(self, n, direccion = DireccionReproduccion.ADELANTE):
+        if direccion == DireccionReproduccion.ADELANTE:
+            self.hacia_adelante(n)
+        else:
+            self.hacia_atras(n)
+        self.aplicar_frame()
+
+    def actualizar_frame(self) -> None:
+        """Método que va actualizando el valor de frame"""
+        self.frame = self.pelicula[self.i]
+        self.mover(1, self.direccion_reproduccion) 
+               
     def watch_frame(self, nuevo_frame) -> None:
         """Se llama cuando la variable frame cambia"""
         self.update(nuevo_frame)
 
     def play(self) -> None:
-        """Metodo para iniciar o resumir la animación"""
+        """Método para iniciar o resumir la animación"""
         self.animacion.resume()
 
     def pausa(self) -> None:
-        """Metodo para pausar la animación"""
+        """Método para pausar la animación"""
         self.animacion.pause()
 
     def detener(self) -> None:
@@ -54,25 +76,33 @@ class AreaAnimacion(Static):
         self.animacion.reset()
         self.animacion.pause()
 
+    def frames_por_segundo(self):
+        return int(1 / self.velocidad)
+
     def adelantar(self) -> None:
         ToastApp.notificacion_adelantar(self)
-        nuevo_indice = self.i + int(1 / self.velocidad * 5)
-        self.i = nuevo_indice if nuevo_indice < len(self.pelicula) else nuevo_indice - len(self.pelicula)
-        self.frame = self.pelicula[self.i]
-
+        frames = self.frames_por_segundo() * 5
+        self.mover(frames, DireccionReproduccion.ADELANTE)
+        
     def retroceder(self) -> None:
         ToastApp.notificacion_retroceder(self)
-        nuevo_indice = self.i - int(1 / self.velocidad * 5)
-        self.i = nuevo_indice if nuevo_indice >= 0 else len(self.pelicula) + nuevo_indice - 1
-        self.frame = self.pelicula[self.i]
+        frames = self.frames_por_segundo() * 5
+        self.mover(frames, DireccionReproduccion.ATRAS)
+
+    def invertir(self) -> None:
+        if self.direccion_reproduccion == DireccionReproduccion.ADELANTE:
+            self.direccion_reproduccion = DireccionReproduccion.ATRAS
+        else:
+            self.direccion_reproduccion = DireccionReproduccion.ADELANTE
 
 class Botones(Horizontal):
         
     def compose(self) -> ComposeResult:
-        yield Button("Play", variant="success", id="play", classes="button_play")
+        yield Button("Reproducir", variant="success", id="play", classes="button_play")
         yield Button("Detener", variant="error", id="stop")
-        yield Button("Adelante", id="adelantar")
-        yield Button("Atras", id="retroceder")
+        yield Button("Adelantar", id="adelantar")
+        yield Button("Retroceder", id="retroceder")
+        yield Button("<--", variant="warning", id="invertir")
 
 class Reproductor(Vertical):
     """El reproductor"""
@@ -101,8 +131,13 @@ class Reproductor(Vertical):
         boton.label = "Play"
         boton.variant = "success"
 
-    
-                
+    def preparar_boton_invertir(self):
+        boton = self.query_one("#invertir")
+        if self.area_animacion.direccion_reproduccion == DireccionReproduccion.ADELANTE:
+            boton.label = "<--"
+        else:
+            boton.label = "-->"
+            
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""
         button_id = event.button.id
@@ -124,10 +159,14 @@ class Reproductor(Vertical):
         elif button_id == "adelantar":
             if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
                 self.area_animacion.adelantar()
-
         elif button_id == "retroceder":
             if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
                 self.area_animacion.retroceder()
+        elif button_id == "invertir":
+            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+                self.area_animacion.invertir()
+                self.preparar_boton_invertir()
+                
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""

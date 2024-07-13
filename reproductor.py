@@ -122,7 +122,7 @@ class Botones(Horizontal):
         yield Button("Adelantar", id="adelantar")
         yield Button("Retroceder", id="retroceder")
         yield Button("<--", variant="warning", id="invertir")
-        yield Button("Velocidad 0.5 x", id="slow_motion")
+        yield Button("Velocidad 1.0 x", id="slow_motion")
 
 class Reproductor(Vertical):
     """El reproductor"""
@@ -161,9 +161,9 @@ class Reproductor(Vertical):
     def preparar_boton_slow_motion(self):
         boton = self.query_one("#slow_motion")
         if self.estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
-            boton.label = "Velocidad 0.5 x"
-        elif self.estado_reproduccion == EstadoReproduccion.SLOWMOTION:
             boton.label = "Velocidad 1.0 x"
+        elif self.estado_reproduccion == EstadoReproduccion.SLOWMOTION:
+            boton.label = "Velocidad 0.5 x"
             
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""

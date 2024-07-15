@@ -121,7 +121,7 @@ class Botones(Horizontal):
         yield Button("Retroceder", id="retroceder")
         yield Button("<--", variant="warning", id="invertir")
         yield Middle(Button("Velocidad 1.0 x", id="slow-motion"), 
-                     Select.from_values((opcion for opcion in self.velocidades), id="selector-velocidad", allow_blank=False, value=self.velocidades[2]))
+                     Select.from_values(self.velocidades, id="selector-velocidad", allow_blank=False, value=self.velocidades[2]))
     
     def elegir_velocidad(self) -> None:
         self.add_class("eligiendo-velocidad")

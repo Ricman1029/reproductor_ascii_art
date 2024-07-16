@@ -23,7 +23,7 @@ class ToastApp(App[None]):
     def notificacion_retroceder(self) -> None:
         self.notify("Retrocediendo 5s.", timeout=1.5)
 
-    def notificacion_slow_motion_activado(self, velocidad) -> None:
+    def notificacion_cambio_velocidad(self, velocidad) -> None:
         self.notify(f"Velocidad {velocidad}x", timeout=1.5)
 
 class AreaAnimacion(Static):
@@ -103,10 +103,10 @@ class AreaAnimacion(Static):
         self.animacion.stop()
         self.animacion = self.set_interval(velocidad, self.actualizar_frame, pause=True)
 
-    def alternar_slow_motion(self, estado_reproduccion, velocidad_elegida) -> None:
+    def alternar_velocidad_reproduccion(self, estado_reproduccion, velocidad_elegida) -> None:
         nueva_velocidad = self.velocidad / velocidad_elegida
-        ToastApp.notificacion_slow_motion_activado(self, velocidad_elegida)
         self.cambiar_velocidad(nueva_velocidad)
+        ToastApp.notificacion_cambio_velocidad(self, velocidad_elegida)
         if estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
             self.animacion.resume()
 
@@ -158,7 +158,7 @@ class Reproductor(Vertical):
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "selector-velocidad":
             velocidad_elegida = float(event.value.strip("Velocidad !x"))
-            self.area_animacion.alternar_slow_motion(self.estado_reproduccion, velocidad_elegida)
+            self.area_animacion.alternar_velocidad_reproduccion(self.estado_reproduccion, velocidad_elegida)
             
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""

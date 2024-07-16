@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Static, Button, Select
-from textual.containers import Horizontal, Vertical, Middle
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from animacion import obtener_pelicula, obtener_configuracion
 from enum import Enum

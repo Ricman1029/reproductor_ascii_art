@@ -12,21 +12,7 @@ Button {
     margin: 0 1
 }
 
-#slow-motion {
-    background: #5eb1bf
-}
-
 #selector-velocidad {
-    dock: left;
-    display: None;
     background: #5eb1bf;
-    width: 20;
-}
-
-.eligiendo-velocidad #slow-motion {
-    display: None
-}
-
-.eligiendo-velocidad #selector-velocidad {
-    display: Block
+    width: 22;
 }

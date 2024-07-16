@@ -120,20 +120,7 @@ class Botones(Horizontal):
         yield Button("Adelantar", id="adelantar")
         yield Button("Retroceder", id="retroceder")
         yield Button("<--", variant="warning", id="invertir")
-        yield Middle(Button("Velocidad 1.0 x", id="slow-motion"), 
-                     Select.from_values(self.velocidades, id="selector-velocidad", allow_blank=False, value=self.velocidades[2]))
-    
-    def elegir_velocidad(self) -> None:
-        self.add_class("eligiendo-velocidad")
-        self.query_one("#slow-motion").disabled = True
-        self.query_one("#selector-velocidad").expanded = True
-
-    def preparar_boton_velocidad(self) -> None:
-        self.remove_class("eligiendo-velocidad")
-        lista = self.query_one("#selector-velocidad")
-        boton = self.query_one("#slow-motion")
-        boton.disabled = False
-        boton.label = lista.value
+        yield Select.from_values(self.velocidades, id="selector-velocidad", allow_blank=False, value=self.velocidades[2])
 
 class Reproductor(Vertical):
     """El reproductor"""
@@ -170,7 +157,6 @@ class Reproductor(Vertical):
 
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "selector-velocidad":
-            Botones.preparar_boton_velocidad(self)
             velocidad_elegida = float(event.value.strip("Velocidad !x"))
             self.area_animacion.alternar_slow_motion(self.estado_reproduccion, velocidad_elegida)
             
@@ -202,8 +188,6 @@ class Reproductor(Vertical):
             if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
                 self.area_animacion.invertir()
                 self.preparar_boton_invertir()
-        elif button_id == "slow-motion":
-            Botones.elegir_velocidad(self)
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""

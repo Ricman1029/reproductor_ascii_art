@@ -23,9 +23,6 @@ class ToastApp(App[None]):
     def notificacion_retroceder(self) -> None:
         self.notify("Retrocediendo 5s.", timeout=1.5)
 
-    def notificacion_cambio_velocidad(self, velocidad) -> None:
-        self.notify(f"Velocidad {velocidad}x", timeout=1.5)
-
 class AreaAnimacion(Static):
     
     frame = reactive("")
@@ -106,7 +103,6 @@ class AreaAnimacion(Static):
     def alternar_velocidad_reproduccion(self, estado_reproduccion, velocidad_elegida) -> None:
         nueva_velocidad = self.velocidad / velocidad_elegida
         self.cambiar_velocidad(nueva_velocidad)
-        ToastApp.notificacion_cambio_velocidad(self, velocidad_elegida)
         if estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
             self.animacion.resume()
 

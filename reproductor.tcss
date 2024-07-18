@@ -4,15 +4,23 @@ AreaAnimacion {
     border: red;
 }
 
-Botones {
-    margin: 1 1;
-}
-
-Button {
-    margin: 0 1
+Botones > Button, Select{
+    margin: 0 1;
 }
 
 #selector-velocidad {
     background: #5eb1bf;
     width: 22;
+}
+
+BarraProgreso {
+    grid-size: 155 1;
+    background: blue;
+    height: 1;
+    dock: bottom;
+}
+
+.lleno {
+    background: red;
+    color: red;
 }

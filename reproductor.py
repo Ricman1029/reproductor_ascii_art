@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Static, Button, Select
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, Grid
 from textual.reactive import reactive
 from animacion import obtener_pelicula, obtener_configuracion
 from enum import Enum
@@ -33,6 +33,10 @@ class AreaAnimacion(Static):
         self.pelicula = pelicula
         self.i = 0
         self.direccion_reproduccion = DireccionReproduccion.ADELANTE
+        self.barra_progreso = BarraProgreso(len(pelicula))
+
+    def compose(self) -> ComposeResult:
+        yield self.barra_progreso
         
     def on_mount(self) -> None:
         """Evento que se llama cuando el widget se agrega a la app."""
@@ -48,11 +52,12 @@ class AreaAnimacion(Static):
         self.frame = self.pelicula[self.i]
 
     def mover(self, n, direccion = DireccionReproduccion.ADELANTE):
+        self.aplicar_frame()
+        self.barra_progreso.siguiente(self.i)
         if direccion == DireccionReproduccion.ADELANTE:
             self.hacia_adelante(n)
         else:
             self.hacia_atras(n)
-        self.aplicar_frame()
 
     def actualizar_frame(self) -> None:
         """Método que va actualizando el valor de frame"""
@@ -76,6 +81,7 @@ class AreaAnimacion(Static):
         self.frame = ""
         self.animacion.reset()
         self.animacion.pause()
+        self.barra_progreso.vaciar_barra()
 
     def frames_por_segundo(self):
         return int(1 / self.velocidad)
@@ -105,6 +111,40 @@ class AreaAnimacion(Static):
         self.cambiar_velocidad(nueva_velocidad)
         if estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
             self.animacion.resume()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.i = int(str(event.button.label))
+        self.barra_progreso.vaciar_barra()
+        self.barra_progreso.llenar_barra_por_boton(self.i)
+        self.aplicar_frame()
+
+class BarraProgreso(Grid):
+
+    def __init__(self, largo, *args, **kwargs):
+        super(BarraProgreso, self).__init__(*args, **kwargs)
+        self.largo = largo
+
+    def compose(self) -> ComposeResult:
+        for i in range(self.largo):
+            yield Button(f"{i}", id=f"barra-{i}")
+    
+    def siguiente(self, indice) -> None:
+        self.llenar_barra(indice)
+        if indice == self.largo - 1:
+            self.vaciar_barra()
+
+    def vaciar_barra(self) -> None:
+        for child in self.children:
+            child.remove_class("lleno")
+
+    def llenar_barra_por_boton(self, indice):
+        for child in self.children:
+            if int(child.id.strip("barra- !")) > indice:
+                break
+            child.add_class("lleno")
+
+    def llenar_barra(self, indice) -> None:
+        self.query_one(f"#barra-{indice}").add_class("lleno")
 
 class Botones(Horizontal):
     

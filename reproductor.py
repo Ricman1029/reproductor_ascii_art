@@ -139,7 +139,7 @@ class BarraProgreso(Grid):
 
     def llenar_barra_por_boton(self, indice):
         for child in self.children:
-            if int(child.id.strip("barra- !")) > indice:
+            if int(str(child.label)) > indice:
                 break
             child.add_class("lleno")
 

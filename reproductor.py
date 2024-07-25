@@ -1,7 +1,8 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Static, Button, Select
+from textual.widgets import Header, Footer, Static, Button, Select
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
+from textual.binding import Binding
 from animacion import obtener_pelicula, obtener_configuracion
 from enum import Enum
 
@@ -120,7 +121,7 @@ class Botones(Horizontal):
 
 class Reproductor(Vertical):
     """El reproductor"""
-
+    
     def __init__(self, *args, **kwargs):
         super(Reproductor, self).__init__(*args, **kwargs)
         """Espacio donde se verá la animación"""
@@ -141,7 +142,7 @@ class Reproductor(Vertical):
 
     def preparar_boton_play(self):
         boton = self.query_one("#play")
-        boton.label = "Play"
+        boton.label = "Reproducir"
         boton.variant = "success"
 
     def preparar_boton_invertir(self):
@@ -160,39 +161,83 @@ class Reproductor(Vertical):
         """Evento que se llama al presionarse un botón"""
         button_id = event.button.id
         if button_id == "play":
-            if self.estado_reproduccion in (EstadoReproduccion.DETENIDO, EstadoReproduccion.PAUSADO):
-                self.estado_reproduccion = EstadoReproduccion.REPRODUCIENDO
-                self.preparar_boton_pausa()
-                self.area_animacion.play()                
-            else:
-                self.estado_reproduccion = EstadoReproduccion.PAUSADO
-                self.preparar_boton_play()
-                self.area_animacion.pausa()
-                
+            self.reproducir_pausar()    
         elif button_id == "stop":
-            self.estado_reproduccion = EstadoReproduccion.DETENIDO
-            self.area_animacion.detener()
-            self.preparar_boton_play()
-
+            self.detener()
         elif button_id == "adelantar":
-            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
-                self.area_animacion.adelantar()
+            self.adelantar()
         elif button_id == "retroceder":
-            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
-                self.area_animacion.retroceder()
+            self.retroceder()
         elif button_id == "invertir":
-            if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
-                self.area_animacion.invertir()
-                self.preparar_boton_invertir()
+            self.invertir()
+                
+    def reproducir_pausar(self):
+        if self.estado_reproduccion in (EstadoReproduccion.DETENIDO, EstadoReproduccion.PAUSADO):
+            self.estado_reproduccion = EstadoReproduccion.REPRODUCIENDO
+            self.preparar_boton_pausa()
+            self.area_animacion.play()                
+        else:
+            self.estado_reproduccion = EstadoReproduccion.PAUSADO
+            self.preparar_boton_play()
+            self.area_animacion.pausa()
+            
+    def detener(self):
+        self.estado_reproduccion = EstadoReproduccion.DETENIDO
+        self.area_animacion.detener()
+        self.preparar_boton_play()
+        
+    def adelantar(self):
+        if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+            self.area_animacion.adelantar()
+            
+    def retroceder(self):
+        if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+            self.area_animacion.retroceder()
+
+    def invertir(self):
+        if self.estado_reproduccion in (EstadoReproduccion.PAUSADO, EstadoReproduccion.REPRODUCIENDO):
+            self.area_animacion.invertir()
+            self.preparar_boton_invertir()
+
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""
 
     CSS_PATH = "reproductor.tcss"
 
+    BINDINGS = [
+        Binding(key="escape", action="quit", description="Salir"),
+        Binding(key="space", action="reproducir_pausar", description="Reproducir"),
+        Binding(key="d", action="detener", description="Detener"),
+        Binding(key="right", action="adelantar", description="Adelantar"),
+        Binding(key="left", action="retroceder", description="Retroceder"),
+        Binding(key="i", action="invertir", description="Cambiar dirección"),
+    ]
+    
+    
+    def __init__(self, *args, **kwargs):
+        super(ReproductorApp, self).__init__(*args, **kwargs)
+        self.reproductor = Reproductor()
+
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Reproductor()
+        yield self.reproductor
+        yield Footer()
+        
+    def action_reproducir_pausar(self):
+        self.reproductor.reproducir_pausar()
+    
+    def action_detener(self):
+        self.reproductor.detener()
+        
+    def action_adelantar(self):
+        self.reproductor.adelantar()
+                    
+    def action_retroceder(self):
+        self.reproductor.retroceder()
+        
+    def action_invertir(self):
+        self.reproductor.invertir()
 
 
 if __name__ == "__main__":

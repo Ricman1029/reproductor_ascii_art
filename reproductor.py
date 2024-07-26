@@ -42,6 +42,7 @@ class AreaAnimacion(Static):
         
 
     def set_texto_animacion(self, texto_animacion, velocidad):
+        self.velocidad = velocidad
         self.texto_animacion = texto_animacion
         self.cambiar_velocidad(velocidad)
     
@@ -108,7 +109,6 @@ class AreaAnimacion(Static):
     def cambiar_velocidad(self, velocidad) -> None:
         if self.animacion is not None:
             self.animacion.stop()
-        self.velocidad = velocidad
         self.animacion = self.set_interval(velocidad, self.actualizar_frame, pause=True)
 
 

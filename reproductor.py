@@ -1,10 +1,15 @@
+from pathlib import Path
+
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Static, Button, Select
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.binding import Binding
+from textual_fspicker import FileOpen
+from barra_estado import BarraEstado
 from animacion import obtener_pelicula, obtener_configuracion
 from enum import Enum
+
 
 class EstadoReproduccion(Enum):
     PAUSADO = 0
@@ -15,7 +20,6 @@ class EstadoReproduccion(Enum):
 class DireccionReproduccion(Enum):
     ADELANTE = 0
     ATRAS = 1
-
 
 class ToastApp(App[None]):
     def notificacion_adelantar(self) -> None:
@@ -28,25 +32,28 @@ class AreaAnimacion(Static):
     
     frame = reactive("")
     
-    def __init__(self, velocidad, pelicula, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(AreaAnimacion, self).__init__(*args, **kwargs)
-        self.velocidad = velocidad
-        self.pelicula = pelicula
+        self.velocidad = None
+        self.texto_animacion = None
+        self.animacion = None
         self.i = 0
         self.direccion_reproduccion = DireccionReproduccion.ADELANTE
         
-    def on_mount(self) -> None:
-        """Evento que se llama cuando el widget se agrega a la app."""
-        self.animacion = self.set_interval(self.velocidad, self.actualizar_frame, pause=True)
 
+    def set_texto_animacion(self, texto_animacion, velocidad):
+        self.velocidad = velocidad
+        self.texto_animacion = texto_animacion
+        self.cambiar_velocidad(velocidad)
+    
     def hacia_adelante(self, frames) -> None:
-        self.i = self.i + frames if self.i + frames < len(self.pelicula) else 0
+        self.i = self.i + frames if self.i + frames < len(self.texto_animacion) else 0
                 
     def hacia_atras(self, frames) -> None:
-        self.i = self.i - frames if self.i - frames > 0 else len(self.pelicula) - 1
+        self.i = self.i - frames if self.i - frames > 0 else len(self.texto_animacion) - 1
 
     def aplicar_frame(self):
-        self.frame = self.pelicula[self.i]
+        self.frame = self.texto_animacion[self.i]
 
     def mover(self, n, direccion = DireccionReproduccion.ADELANTE):
         if direccion == DireccionReproduccion.ADELANTE:
@@ -57,9 +64,9 @@ class AreaAnimacion(Static):
 
     def actualizar_frame(self) -> None:
         """Método que va actualizando el valor de frame"""
-        self.frame = self.pelicula[self.i]
+        self.frame = self.texto_animacion[self.i]
         self.mover(1, self.direccion_reproduccion) 
-               
+        
     def watch_frame(self, nuevo_frame) -> None:
         """Se llama cuando la variable frame cambia"""
         self.update(nuevo_frame)
@@ -75,8 +82,10 @@ class AreaAnimacion(Static):
     def detener(self) -> None:
         self.i = 0
         self.frame = ""
-        self.animacion.reset()
-        self.animacion.pause()
+        
+        if self.animacion is not None:
+            self.animacion.reset()
+            self.animacion.pause()
 
     def frames_por_segundo(self):
         return int(1 / self.velocidad)
@@ -98,10 +107,15 @@ class AreaAnimacion(Static):
             self.direccion_reproduccion = DireccionReproduccion.ADELANTE
 
     def cambiar_velocidad(self, velocidad) -> None:
-        self.animacion.stop()
+        if self.animacion is not None:
+            self.animacion.stop()
         self.animacion = self.set_interval(velocidad, self.actualizar_frame, pause=True)
 
+
     def alternar_velocidad_reproduccion(self, estado_reproduccion, velocidad_elegida) -> None:
+        if self.velocidad is None:
+            return
+        
         nueva_velocidad = self.velocidad / velocidad_elegida
         self.cambiar_velocidad(nueva_velocidad)
         if estado_reproduccion == EstadoReproduccion.REPRODUCIENDO:
@@ -112,11 +126,12 @@ class Botones(Horizontal):
     velocidades = ["Velocidad 2.0x", "Velocidad 1.5x", "Velocidad 1.0x", "Velocidad 0.5x"]
 
     def compose(self) -> ComposeResult:
-        yield Button("Reproducir", variant="success", id="play", classes="button_play")
-        yield Button("Detener", variant="error", id="stop")
-        yield Button("Adelantar", id="adelantar")
-        yield Button("Retroceder", id="retroceder")
-        yield Button("<--", variant="warning", id="invertir")
+        yield Button("Seleccionar...", id="seleccionar")
+        yield Button("Reproducir", variant="success", id="play", classes="button_play", disabled=True)
+        yield Button("Detener", variant="error", id="stop", disabled=True)
+        yield Button("Adelantar", id="adelantar", disabled=True)
+        yield Button("Retroceder", id="retroceder", disabled=True)
+        yield Button("<--", variant="warning", id="invertir", disabled=True)
         yield Select.from_values(self.velocidades, id="selector-velocidad", allow_blank=False, value=self.velocidades[2])
 
 class Reproductor(Vertical):
@@ -125,16 +140,29 @@ class Reproductor(Vertical):
     def __init__(self, *args, **kwargs):
         super(Reproductor, self).__init__(*args, **kwargs)
         """Espacio donde se verá la animación"""
-        with open("mundo.txt") as archivo:
-            self.velocidad, _ = obtener_configuracion(archivo)
-            self.pelicula = obtener_pelicula(archivo)
-        self.area_animacion = AreaAnimacion(self.velocidad, self.pelicula)
+        self.area_animacion = AreaAnimacion()
         self.estado_reproduccion = EstadoReproduccion.DETENIDO
+        self.archivo_seleccionado = True
 
     def compose(self) -> ComposeResult:
         yield self.area_animacion
         yield Botones()
     
+    def cargar_animacion(self, texto_animacion, velocidad):
+        self.archivo_seleccionado = True
+        self.area_animacion.detener()
+        self.habilitar_botones()
+        self.area_animacion.set_texto_animacion(texto_animacion, velocidad)
+        self.reproducir_pausar()
+        
+    def habilitar_botones(self):
+        self.query_one("#play", Button).disabled = False
+        self.query_one("#stop", Button).disabled = False
+        self.query_one("#adelantar", Button).disabled = False
+        self.query_one("#retroceder", Button).disabled = False
+        self.query_one("#invertir", Button).disabled = False
+        
+        
     def preparar_boton_pausa(self):
         boton = self.query_one("#play")
         boton.label = "Pausar"
@@ -160,7 +188,9 @@ class Reproductor(Vertical):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Evento que se llama al presionarse un botón"""
         button_id = event.button.id
-        if button_id == "play":
+        if button_id == "seleccionar":
+            self.seleccionar_archivo_animacion()
+        elif button_id == "play":
             self.reproducir_pausar()    
         elif button_id == "stop":
             self.detener()
@@ -170,7 +200,7 @@ class Reproductor(Vertical):
             self.retroceder()
         elif button_id == "invertir":
             self.invertir()
-                
+    
     def reproducir_pausar(self):
         if self.estado_reproduccion in (EstadoReproduccion.DETENIDO, EstadoReproduccion.PAUSADO):
             self.estado_reproduccion = EstadoReproduccion.REPRODUCIENDO
@@ -199,6 +229,20 @@ class Reproductor(Vertical):
             self.area_animacion.invertir()
             self.preparar_boton_invertir()
 
+    def cargar_archivo(self, archivo_animacion: Path | None) -> None:
+        if archivo_animacion is None:
+            return
+        nombre_archivo = archivo_animacion._str
+        
+        with open(nombre_archivo, "r") as archivo:
+            configuracion = obtener_configuracion(archivo)
+            animacion = obtener_pelicula(archivo)
+            self.cargar_animacion(animacion, configuracion[0]) 
+            
+        self.app.barra_estado.mensaje = nombre_archivo
+    
+    def seleccionar_archivo_animacion(self) -> None:
+        self.app.push_screen(FileOpen(), callback=self.cargar_archivo)
 
 class ReproductorApp(App):
     """Una aplicación en textual para reproducir animaciones ascii"""
@@ -218,10 +262,13 @@ class ReproductorApp(App):
     def __init__(self, *args, **kwargs):
         super(ReproductorApp, self).__init__(*args, **kwargs)
         self.reproductor = Reproductor()
+        self.barra_estado = BarraEstado()
+        self.barra_estado.mensaje = "Seleccionar una animación..."
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield self.reproductor
+        yield self.barra_estado
         yield Footer()
         
     def action_reproducir_pausar(self):
@@ -239,6 +286,7 @@ class ReproductorApp(App):
     def action_invertir(self):
         self.reproductor.invertir()
 
+    
 
 if __name__ == "__main__":
     app = ReproductorApp()

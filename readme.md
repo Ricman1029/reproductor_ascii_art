@@ -23,10 +23,10 @@ Luego, cada cuadro o frame de la animación está separado por la siguiente marc
 
 ## Próximas funcionalidades
 
-1. Adelantar y retroceder
-2. Slowmotion
-3. Selector de archivos para reproducir
+1. ~~Adelantar y retroceder~~
+2. ~~Reproducir a diferentes velocidades 2x, 1.5x, 0.5x~~
+3. ~~Selector de archivos para reproducir~~
 4. Soporte para animaciones en color
 5. Lista de reproducción
 6. Barra de progreso + avanzar hasta un punto con el mouse.
-7. Cambiar velocidad de reproducción. 2x, 1.5x, 0.5x
+7. ~~Invertir dirección de reproducción~~

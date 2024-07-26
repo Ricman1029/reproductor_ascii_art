@@ -36,12 +36,10 @@ class AreaAnimacion(Static):
         super(AreaAnimacion, self).__init__(*args, **kwargs)
         self.velocidad = None
         self.texto_animacion = None
+        self.animacion = None
         self.i = 0
         self.direccion_reproduccion = DireccionReproduccion.ADELANTE
         
-    def on_mount(self) -> None:
-        """Evento que se llama cuando el widget se agrega a la app."""
-        self.animacion = self.set_interval(self.velocidad, self.actualizar_frame, pause=True)
 
     def set_texto_animacion(self, texto_animacion, velocidad):
         self.texto_animacion = texto_animacion
@@ -83,8 +81,10 @@ class AreaAnimacion(Static):
     def detener(self) -> None:
         self.i = 0
         self.frame = ""
-        self.animacion.reset()
-        self.animacion.pause()
+        
+        if self.animacion is not None:
+            self.animacion.reset()
+            self.animacion.pause()
 
     def frames_por_segundo(self):
         return int(1 / self.velocidad)
@@ -106,8 +106,11 @@ class AreaAnimacion(Static):
             self.direccion_reproduccion = DireccionReproduccion.ADELANTE
 
     def cambiar_velocidad(self, velocidad) -> None:
-        self.animacion.stop()
+        if self.animacion is not None:
+            self.animacion.stop()
+        self.velocidad = velocidad
         self.animacion = self.set_interval(velocidad, self.actualizar_frame, pause=True)
+
 
     def alternar_velocidad_reproduccion(self, estado_reproduccion, velocidad_elegida) -> None:
         if self.velocidad is None:
